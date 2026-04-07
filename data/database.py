@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import date,datetime
 
 def init_db():
     conn = sqlite3.connect("data/hotel.db")
@@ -26,6 +26,7 @@ def init_db():
     conn.commit()
     conn.close()
     print("Database intialized succesfully!")
+
 def add_room(number,r_type,price):
 
     try:
@@ -53,6 +54,7 @@ def get_rooms():
 def get_bookings():
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
+
     cursor.execute("SELECT * FROM bookings")
     data1 = cursor.fetchall()
     conn.close()
@@ -84,46 +86,54 @@ def total_price(check_in,check_out,number):
 def create_booking(name,number,check_in,check_out):
     conn =sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
+    check_in_dt = datetime.strptime(check_in,"%Y-%m-%d")
+    check_out_dt = datetime.strptime(check_out,"%Y-%m-%d")
+    print("HAlooo")
 
+
+    check_in_db = check_in_dt.date().isoformat()
+    check_out_db = check_out_dt.date().isoformat()
+
+    if check_in_dt >= check_out_dt:
+        print("Check-out must be after check-in")
+        return
+    #Tarkistus onko päivälle jo varaus
+    cursor.execute(
+        """
+        SELECT 1
+        FROM bookings
+        WHERE room_number = ?
+            AND NOT (check_out <= ? OR check_in >= ? )
+        LIMIT 1
+    """,(number,check_in_db,check_out_db),
+    )
+    print(cursor.fetchone(),"FETSI")
+    is_booked = cursor.fetchone() is not None
+    is_free = not is_booked
+  
     cursor.execute(
     "SELECT * FROM rooms WHERE room_number = ?",
     (number,)
     )
-
-    room = cursor.fetchone()
     
-    if not room:
-        print("Room was not found")
-        conn.close()
-        return
-
-    #Overlappings
-    cursor.execute("""
-        SELECT * FROM bookings WHERE room_number = ?
-        AND NOT (
-                check_out <= ?
-            OR  check_in >= ?
-                   )
-        """,(number,check_in,check_out)
-    )
-
-    conflict = cursor.fetchone()
-    if conflict:
-        print("Room is already taken")
-        conn.close()
-        return  
-    #Insert booking
-    cursor.execute("""
-       INSERT INTO bookings (guest_name, room_number, check_in, check_out,total_price)
-        VALUES (?,?,?,?,?)
-    """,(name,number,check_in,check_out,50)
-    ) 
-    row = cursor.fetchone()
-
-    if not row:
-        print("Error with booking")
+    if is_free:    
+        try:
+            cursor.execute("""
+                INSERT INTO bookings (guest_name, room_number, check_in, check_out,total_price)
+                VALUES (?,?,?,?,?)
+                """,(name,number,check_in_db,check_out_db,50)
+                ) 
+            conn.commit()
+            conn.close()
+            return
+        
+        except sqlite3.Error as e:
+            print(f"{e} occured while trying to insert")
+            conn.close()
+            return
     conn.commit()
     conn.close()
+    return
 
 def modify_booking():
     check = input("Enter what do you want to modify? 1:name, 2:number, 3:check in or 4:check out")
@@ -131,6 +141,7 @@ def modify_booking():
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
     check = check[0]
+
     if check == "1":
         cursor.execute("""
         UPDATE bookings
@@ -138,24 +149,30 @@ def modify_booking():
         """)
 
     
-    print("Vittu ku väsyttää...")
+
    
     
     cursor.execute("""
     UPDATE bookings
     SET name = ?, number = ?,check_in = ?, check_out = ?            
     """)
+
 def cancel_booking(number:int):
-    conn = sqlite3.connect("data/hotel.db")
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect("data/hotel.db")
+        cursor = conn.cursor()
 
-    cursor.execute("""
-    DELETE 
-    FROM bookings;
-    """)
+        cursor.execute("""
+        DELETE
+        FROM bookings
+        WHERE room_number = ?               
+        """,(number,))
 
-    conn.commit()
-    conn.close()
-
-print(get_bookings(),"Bookings")
-print(get_rooms(),"Rooms")
+        conn.commit()
+        conn.close()
+        print("room cancelled succesfully")
+    except:
+        print("Error on canceling booking")
+print(create_booking("Jussi",5,"2020-03-10","2020-04-10"))
+#"print(get_rooms())
+print(get_bookings())
