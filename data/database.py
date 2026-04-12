@@ -49,7 +49,7 @@ def get_rooms():
     cursor.execute("SELECT * FROM rooms")
     data = cursor.fetchall()
     conn.close()
-    return data
+    print(data)
 
 def get_bookings():
     conn = sqlite3.connect("data/hotel.db")
@@ -58,43 +58,51 @@ def get_bookings():
     cursor.execute("SELECT * FROM bookings")
     data1 = cursor.fetchall()
     conn.close()
-    return data1                        #jesaia söi pilttiä tuolla eturivissä
+    print(data1)                        #jesaia söi pilttiä tuolla eturivissä
 
-def total_price(check_in,check_out,number):
+def total_price(number,check_in,check_out):
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
 
+    print(check_in,check_out)
+    check_in = datetime.strptime(check_in,"%d-%m-%Y")
+    check_out = datetime.strptime(check_out,"%d-%m-%Y")
     cursor.execute("""
-    SELECT price_per_night FROM rooms WHERE room_number = ?""",
+    SELECT price_per_night
+     FROM rooms
+     WHERE room_number = ?
+    """,
     (number,)             
     )
+
     row = cursor.fetchone()
     print(row,"row")
+
     if not row:
         print("Room does not exist")
         conn.close()
         return
     
-    cursor.execute("""
-       SELECT check_in,check_out FROM bookings WHERE check_in = ? AND check_out = ?            
-    """,(check_in,check_out))
+    nights = (check_out-check_in).days
+    price = nights*row[0]
     
-    dates = cursor.fetchone()
-
-    print(dates,"dates")    
-
+    conn.close()
+    return price
+    
 def create_booking(name,number,check_in,check_out):
     conn =sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
-    check_in_dt = datetime.strptime(check_in,"%Y-%m-%d")
-    check_out_dt = datetime.strptime(check_out,"%Y-%m-%d")
-    print("HAlooo")
 
-
+    check_in_dt = datetime.strptime(check_in,"%d-%m-%Y")
+    check_out_dt = datetime.strptime(check_out,"%d-%m-%Y")
+    #print(check_in_dt,"TÄSÄMä")
     check_in_db = check_in_dt.date().isoformat()
     check_out_db = check_out_dt.date().isoformat()
 
-    if check_in_dt >= check_out_dt:
+    print(check_in_db,check_out_db,"TÄSSÄDatabase")
+    
+
+    if check_in_db >= check_out_db:
         print("Check-out must be after check-in")
         return
     #Tarkistus onko päivälle jo varaus
@@ -107,7 +115,7 @@ def create_booking(name,number,check_in,check_out):
         LIMIT 1
     """,(number,check_in_db,check_out_db),
     )
-    print(cursor.fetchone(),"FETSI")
+
     is_booked = cursor.fetchone() is not None
     is_free = not is_booked
   
@@ -115,13 +123,13 @@ def create_booking(name,number,check_in,check_out):
     "SELECT * FROM rooms WHERE room_number = ?",
     (number,)
     )
-    
+
     if is_free:    
         try:
             cursor.execute("""
                 INSERT INTO bookings (guest_name, room_number, check_in, check_out,total_price)
                 VALUES (?,?,?,?,?)
-                """,(name,number,check_in_db,check_out_db,50)
+                """,(name,number,check_in_db,check_out_db,total_price(number,check_in,check_out))
                 ) 
             conn.commit()
             conn.close()
@@ -134,28 +142,6 @@ def create_booking(name,number,check_in,check_out):
     conn.commit()
     conn.close()
     return
-
-def modify_booking():
-    check = input("Enter what do you want to modify? 1:name, 2:number, 3:check in or 4:check out")
-    check.strip(" ")
-    conn = sqlite3.connect("data/hotel.db")
-    cursor = conn.cursor()
-    check = check[0]
-
-    if check == "1":
-        cursor.execute("""
-        UPDATE bookings
-        SET 
-        """)
-
-    
-
-   
-    
-    cursor.execute("""
-    UPDATE bookings
-    SET name = ?, number = ?,check_in = ?, check_out = ?            
-    """)
 
 def cancel_booking(number:int):
     try:
@@ -173,6 +159,7 @@ def cancel_booking(number:int):
         print("room cancelled succesfully")
     except:
         print("Error on canceling booking")
-print(create_booking("Jussi",5,"2020-03-10","2020-04-10"))
-#"print(get_rooms())
-print(get_bookings())
+create_booking("Matti",5,"03-10-2002","13-10-2002")
+get_bookings()
+
+
