@@ -64,7 +64,6 @@ def total_price(number,check_in,check_out):
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
 
-    print(check_in,check_out)
     check_in = datetime.strptime(check_in,"%d-%m-%Y")
     check_out = datetime.strptime(check_out,"%d-%m-%Y")
     cursor.execute("""
@@ -77,11 +76,11 @@ def total_price(number,check_in,check_out):
 
     row = cursor.fetchone()
     print(row,"row")
-
-    if not row:
-        print("Room does not exist")
-        conn.close()
-        return
+    try:
+        if not row:
+            raise ValueError("Room does not exist")
+    except ValueError as e:
+        print(f"Error loading room {e}")
     
     nights = (check_out-check_in).days
     price = nights*row[0]
@@ -95,16 +94,17 @@ def create_booking(name,number,check_in,check_out):
 
     check_in_dt = datetime.strptime(check_in,"%d-%m-%Y")
     check_out_dt = datetime.strptime(check_out,"%d-%m-%Y")
-    #print(check_in_dt,"TÄSÄMä")
+    
     check_in_db = check_in_dt.date().isoformat()
     check_out_db = check_out_dt.date().isoformat()
 
-    print(check_in_db,check_out_db,"TÄSSÄDatabase")
+   
     
-
-    if check_in_db >= check_out_db:
-        print("Check-out must be after check-in")
-        return
+    try:
+        if check_in_db >= check_out_db:
+            raise ValueError("Check-out must be after check-in")
+    except ValueError as e:
+        print(f"Error on check-in/check-out dates {e}")
     #Tarkistus onko päivälle jo varaus
     cursor.execute(
         """
