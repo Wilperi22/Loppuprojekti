@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime
 
 def init_db():
+    #Creating the database
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
     cursor.execute('''
@@ -32,6 +33,7 @@ def to_datetime(date_text: str):
 
 
 def add_room(number,r_type,price):
+    #Adding rooms to Table rooms
 
     try:
         conn = sqlite3.connect("data/hotel.db")
@@ -49,6 +51,7 @@ def add_room(number,r_type,price):
 
 
 def modify_room(orginal_number, new_number=None, r_type=None, price=None):
+    #Modifying rooms
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
     try:
@@ -89,6 +92,7 @@ def modify_room(orginal_number, new_number=None, r_type=None, price=None):
    
     
 def modify_bookings(ID,new_name=None,new_number=None,new_check_in=None,new_check_out=None,new_total_price=None):
+        #Used for modifying bookings
         conn = sqlite3.connect("data/hotel.db")
         cursor = conn.cursor()
 
@@ -99,7 +103,9 @@ def modify_bookings(ID,new_name=None,new_number=None,new_check_in=None,new_check
             "new_check_out":new_check_out,
             "new_total_price":new_total_price
             }
+        #Clears updates if value = None
         updates = {key: value for key, value in updates.items() if value is not None}
+        
         query = f"UPDATE bookings SET {(", ".join(f"{k}=?" for k in updates.keys()))} WHERE ID=?"
         cursor.execute(query,(tuple(updates.values())+ID,))
 
@@ -121,7 +127,7 @@ def get_bookings():
     data1 = cursor.fetchall()
     conn.close()
     return data1                        
-print(get_rooms())
+
 def total_price(number,check_in,check_out):
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
@@ -137,7 +143,7 @@ def total_price(number,check_in,check_out):
     )
 
     row = cursor.fetchone()
-    print(row,"row")
+    
     try:
         if not row:
             raise ValueError("Room does not exist")

@@ -9,6 +9,7 @@ from data.database import (
     cancel_booking,
     create_booking,
     get_rooms,
+    get_bookings,
     init_db,
     total_price,
 )
@@ -19,6 +20,8 @@ DB_PATH = Path(__file__).with_name("data").joinpath("hotel.db")
 def add_room_main():
     try: 
        r_number = int(input("Give room number:"))
+       if r_number in get_rooms():
+           print("Room already exists.")
        r_type = input("Give room type:")
        r_price = int(input("Give roomprice:"))
        
@@ -29,6 +32,7 @@ def add_room_main():
 add_room_main()
 
 def view_rooms_main():
+    #rows = rooms.fetchall
     rows = get_rooms()
     print(tabulate(rows,
                    headers=["Room number","Room type","Price per night"],
@@ -43,6 +47,11 @@ def menu() -> None:
     print("5. Cancel booking")
     print("0. Exit")
 
+def view_bookings_main():
+    rows = get_bookings()
+    print(tabulate(rows,
+                   headers=["Room number","Room type","Price per night"],
+                    tablefmt="grid"))
 
 def main():
     init_db()
