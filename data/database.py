@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import date,datetime
+from datetime import datetime
 
 def init_db():
     conn = sqlite3.connect("data/hotel.db")
@@ -8,8 +8,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS rooms (
             room_number INTEGER PRIMARY KEY,
             room_type TEXT NOT NULL,
-            price_per_night REAL NOT NULL,
-            is_avible INTEGER DEFAULT 1
+            price_per_night REAL NOT NULL
         )
     ''')
     cursor.execute('''
@@ -27,6 +26,11 @@ def init_db():
     conn.close()
     print("Database intialized succesfully!")
 
+
+def to_datetime(date_text: str):
+    return datetime.strptime(date_text, "%d-%m-%Y")
+
+
 def add_room(number,r_type,price):
 
     try:
@@ -43,13 +47,71 @@ def add_room(number,r_type,price):
     finally:
         conn.close()
 
+
+def modify_room(orginal_number, new_number=None, r_type=None, price=None):
+    conn = sqlite3.connect("data/hotel.db")
+    cursor = conn.cursor()
+    try:
+   
+        if r_type != None:
+            cursor.execute("""
+                       UPDATE rooms
+                       SET room_type=?
+                       WHERE room_number=?""",
+                       (r_type,orginal_number)
+                       )
+            conn.commit()
+    
+        if price != None:
+      
+            cursor.execute("""
+                       UPDATE rooms
+                       SET price_per_night=?
+                       WHERE room_number=?
+                       """,
+                       (price,orginal_number))
+            conn.commit()
+
+      
+        if new_number != None:
+      
+            cursor.execute("""
+                       UPDATE rooms
+                       SET room_number = ?
+                       WHERE room_number = ?""",
+                       (new_number,orginal_number,)
+                       )    
+            conn.commit()
+    except sqlite3.KeyError as e:
+            print(f"SQL error occurred: {e}")
+    
+    conn.close()
+   
+    
+def modify_bookings(ID,new_name=None,new_number=None,new_check_in=None,new_check_out=None,new_total_price=None):
+        conn = sqlite3.connect("data/hotel.db")
+        cursor = conn.cursor()
+
+        updates = {
+            "new_name":new_name,
+            "new_number":new_number,
+            "new_check_in":new_check_in,
+            "new_check_out":new_check_out,
+            "new_total_price":new_total_price
+            }
+        updates = {key: value for key, value in updates.items() if value is not None}
+        query = f"UPDATE bookings SET {(", ".join(f"{k}=?" for k in updates.keys()))} WHERE ID=?"
+        cursor.execute(query,(tuple(updates.values())+ID,))
+
+
+
 def get_rooms():
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM rooms")
     data = cursor.fetchall()
     conn.close()
-    print(data)
+    return data
 
 def get_bookings():
     conn = sqlite3.connect("data/hotel.db")
@@ -58,8 +120,8 @@ def get_bookings():
     cursor.execute("SELECT * FROM bookings")
     data1 = cursor.fetchall()
     conn.close()
-    print(data1)                        #jesaia söi pilttiä tuolla eturivissä
-
+    return data1                        
+print(get_rooms())
 def total_price(number,check_in,check_out):
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
@@ -143,6 +205,7 @@ def create_booking(name,number,check_in,check_out):
     conn.close()
     return
 
+
 def cancel_booking(number:int):
     try:
         conn = sqlite3.connect("data/hotel.db")
@@ -159,7 +222,5 @@ def cancel_booking(number:int):
         print("room cancelled succesfully")
     except:
         print("Error on canceling booking")
-create_booking("Matti",5,"03-10-2002","13-10-2002")
-get_bookings()
 
 
