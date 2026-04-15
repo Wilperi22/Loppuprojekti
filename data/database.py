@@ -103,7 +103,7 @@ def modify_bookings(ID,new_name=None,new_number=None,new_check_in=None,new_check
             "new_check_out":new_check_out,
             "new_total_price":new_total_price
             }
-        #Clears updates if value = None
+        #Clears updates if value = None deletes it.
         updates = {key: value for key, value in updates.items() if value is not None}
         
         query = f"UPDATE bookings SET {(", ".join(f"{k}=?" for k in updates.keys()))} WHERE ID=?"
