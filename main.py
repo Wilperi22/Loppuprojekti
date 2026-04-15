@@ -39,33 +39,43 @@ def view_rooms_main():
                    headers=["Room number","Room type","Price per night"],
                     tablefmt="grid"))
 
-
-
-
 def view_bookings_main():
     rows = get_bookings()
     print(tabulate(rows,
-                   headers=["Room number","Room type","Price per night"],
+                   headers=["ID","Name","Room number","check-in","check-out","Total price"
+                   ""],
                     tablefmt="grid"))
+    
     
 def book_room_main():
     view_rooms_main()
+    conn =sqlite3.connect("data/hotel.db")
+    cursor = conn.cursor()
+
+    pena =  cursor.execute("""
+                   SELECT room_number
+                   FROM rooms
+                   """)
     try:
         r_number = int(input("Give room number:"))
-        if r_number not in get_rooms():
-            print("Room does not exist.")
-            return
+        if (r_number,) not in pena.fetchall():
+            raise ValueError("Room not found")
         c_name = input("Give customer name:")
-        c_date = input("Give booking date (dd-mm-yyyy):")
-        datetime.strptime(c_date, DATE_FORMAT)
+        c_check_in = input("Give check in date (dd-mm-yyyy):")
+        c_check_out = input("Give check out date (dd-mm-yyyy):")
+
+        datetime.strptime(c_check_in, DATE_FORMAT)
+        datetime.strptime(c_check_out,DATE_FORMAT)
     except ValueError as e:
         print(f"An Error has ocuired: {e}")
         return 
-    create_booking(r_number,c_name,c_date)
+    create_booking(c_name,r_number,c_check_in,c_check_out)
+    print("Booking created succesfully")
 
 def cancel_booking_main():
+        view_bookings_main()
         try:
-            r_number = int(input("Give room number:"))
+            r_number = int(input("Give booking id:"))
             cancel_booking(r_number)
         except ValueError as e:
             print(f"Error has occurred: {e}")
@@ -77,9 +87,14 @@ def modify_room_main():
         new_r_num = int(input("Give new room number(leave empty for no change):"))
         new_r_type = input("Give new room type(leave empty for no change):")
         new_r_price = input("Give new room price (leave empty for no change):")
+
         modify_room(orginal_r_num,new_r_num,new_r_type,new_r_price)
+
     except ValueError as e:
         print(f"Error has occurred: {e}")
+    view_rooms_main()
+
+
 def modify_bookings_main():
     view_bookings_main()
     try:
@@ -88,11 +103,20 @@ def modify_bookings_main():
         new_number = input("New room number(leave empty for no change):")
         new_check_in = input(f"New check in format {DATE_FORMAT} (leave empty for no change): ")
         new_check_out = input(f"New check out format {DATE_FORMAT}(leave empty for no change):")
-        new_total_price = int(input("Input new total price(leave empty for no change):"))
+
+        new_total_price = input("Input new total price(leave empty for no change):")
+        if new_total_price == "":
+            new_total_price = None
+        else:
+            new_total_price = float(new_total_price)
+        
+
         modify_bookings(id,new_name,new_number,new_check_in,new_check_out,new_total_price)
 
     except ValueError as e:
         print(f"Error occurred {e}")
+        return
+    view_bookings_main()
     
 
 def menu():
@@ -100,9 +124,9 @@ def menu():
     print("1. Mofify rooms:")
     print("2. Modify bookings:")
     print("3. Add room:")
-    print("4. View rooms:")
+    print("4. Book room:")
     print("5. View bookings:")
-    print("6. Book room:")
+    print("6. View rooms:")
     print("7. Cancel booking:")
     print("0. Exit:")
 
@@ -113,9 +137,9 @@ def main():
         "1":modify_room_main,
         "2":modify_bookings_main,
         "3": add_room_main,
-        "4": view_rooms_main,
+        "4": book_room_main,
         "5": view_bookings_main,
-        "6": book_room_main, 
+        "6": view_rooms_main, 
         "7": cancel_booking_main,
     }
 
@@ -127,6 +151,8 @@ def main():
             if choice == "0":
                 print("Goodbye.")
                 break
+            elif choice == "" or choice == " ":
+                continue
             else:
                 mainions[choice]()
                 time.sleep(1)

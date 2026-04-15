@@ -97,18 +97,22 @@ def modify_bookings(ID,new_name=None,new_number=None,new_check_in=None,new_check
         cursor = conn.cursor()
 
         updates = {
-            "new_name":new_name,
-            "new_number":new_number,
-            "new_check_in":new_check_in,
-            "new_check_out":new_check_out,
-            "new_total_price":new_total_price
+            "guest_name":new_name,
+            "room_number":new_number,
+            "check_in":new_check_in,
+            "check_out":new_check_out,
+            "total_price":new_total_price
             }
         #Clears updates if value = None deletes it.
-        updates = {key: value for key, value in updates.items() if value is not None}
-        
-        query = f"UPDATE bookings SET {(", ".join(f"{k}=?" for k in updates.keys()))} WHERE ID=?"
-        cursor.execute(query,(tuple(updates.values())+ID,))
-
+        updates = {key: value for key, value in updates.items() if value is not None and value != ""}
+        try:
+            query = f"UPDATE bookings SET {(", ".join(f"{k}=?" for k in updates.keys()))} WHERE ID=?"
+    
+            cursor.execute(query,(tuple(updates.values())+(ID,)))
+        except ValueError as e:
+            print("Tässä mennään mönkään!!!")
+        conn.commit()
+        conn.close()
 
 
 def get_rooms():
@@ -166,7 +170,12 @@ def create_booking(name,number,check_in,check_out):
     check_in_db = check_in_dt.date().isoformat()
     check_out_db = check_out_dt.date().isoformat()
 
-   
+    pena =  cursor.execute("""
+                   SELECT room_number
+                   FROM rooms
+                   """)
+    if (number,) not in pena.fetchall():
+        raise ValueError("Room not found!")
     
     try:
         if check_in_db >= check_out_db:
@@ -220,7 +229,7 @@ def cancel_booking(number:int):
         cursor.execute("""
         DELETE
         FROM bookings
-        WHERE room_number = ?               
+        WHERE id = ?               
         """,(number,))
 
         conn.commit()
