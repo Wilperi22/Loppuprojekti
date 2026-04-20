@@ -33,7 +33,7 @@ def add_room_main():
            raise ValueError("Room price cannot be under 1")
        
     except ValueError as e:
-        print(f"An Error has ocuired: {e}")
+        print(f"An Error has occurred: {e}")
         return 
     add_room(r_number,r_type.title(),r_price)
 
