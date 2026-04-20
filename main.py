@@ -21,10 +21,15 @@ DB_PATH = Path(__file__).with_name("data").joinpath("hotel.db")
 def add_room_main():
     try: 
        r_number = int(input("Give room number:"))
-       if r_number in get_rooms():
+       if (r_number,) in get_rooms() or r_number < 0:
            raise ValueError("Room already exists.")
+       
        r_type = input("Give room type:")
+       if r_type.strip() == "":
+           raise ValueError("Room type cannot be empty")
        r_price = int(input("Give roomprice:"))
+       if r_price < 1:
+           raise ValueError("Room price cannot be under 1")
        
     except ValueError as e:
         print(f"An Error has ocuired: {e}")
@@ -121,7 +126,7 @@ def modify_bookings_main():
 
 def menu():
     print("Hotel Room Booking System")
-    print("1. Mofify rooms:")
+    print("1. Modify rooms:")
     print("2. Modify bookings:")
     print("3. Add room:")
     print("4. Book room:")

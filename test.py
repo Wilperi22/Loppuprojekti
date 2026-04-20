@@ -9,8 +9,4 @@ from data.database import (
     modify_bookings
 )
 
-new_total_price = input("Input new total price(leave empty for no change):")
-if new_total_price == "":
-    new_total_price == None
-print(float(new_total_price))
-
+num = int(input("NUmero

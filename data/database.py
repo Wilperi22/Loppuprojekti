@@ -46,6 +46,7 @@ def add_room(number,r_type,price):
 
     except sqlite3.IntegrityError:
         print(f"Error room {number} dont exist")
+        conn.close()
     finally:
         conn.close()
 
@@ -87,6 +88,7 @@ def modify_room(orginal_number, new_number=None, r_type=None, price=None):
             conn.commit()
     except sqlite3.KeyError as e:
             print(f"SQL error occurred: {e}")
+            conn.close()
     
     conn.close()
    
@@ -110,7 +112,8 @@ def modify_bookings(ID,new_name=None,new_number=None,new_check_in=None,new_check
     
             cursor.execute(query,(tuple(updates.values())+(ID,)))
         except ValueError as e:
-            print("Tässä mennään mönkään!!!")
+            print(f"Error: {e}")
+            conn.close()
         conn.commit()
         conn.close()
 
@@ -118,9 +121,13 @@ def modify_bookings(ID,new_name=None,new_number=None,new_check_in=None,new_check
 def get_rooms():
     conn = sqlite3.connect("data/hotel.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM rooms")
-    data = cursor.fetchall()
-    conn.close()
+    try:
+        cursor.execute("SELECT * FROM rooms")
+        data = cursor.fetchall()
+    except sqlite3.KeyError as e:
+        print(f"Error fetching rooms: {e}")
+    finally:
+        conn.close()
     return data
 
 def get_bookings():
@@ -153,11 +160,13 @@ def total_price(number,check_in,check_out):
             raise ValueError("Room does not exist")
     except ValueError as e:
         print(f"Error loading room {e}")
+    finally:
+        conn.close()    
     
     nights = (check_out-check_in).days
     price = nights*row[0]
     
-    conn.close()
+    
     return price
     
 def create_booking(name,number,check_in,check_out):
@@ -214,9 +223,11 @@ def create_booking(name,number,check_in,check_out):
         
         except sqlite3.Error as e:
             print(f"{e} occured while trying to insert")
+
+        finally:
             conn.close()
             return
-    conn.commit()
+    conn.commit()    
     conn.close()
     return
 
@@ -233,9 +244,12 @@ def cancel_booking(number:int):
         """,(number,))
 
         conn.commit()
-        conn.close()
         print("room cancelled succesfully")
     except:
         print("Error on canceling booking")
+    
+    finally:
+        conn.close()
+    
 
 
