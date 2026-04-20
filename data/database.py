@@ -231,6 +231,20 @@ def create_booking(name,number,check_in,check_out):
     conn.close()
     return
 
+def delete_room(r_num:int):
+    conn = sqlite3.connect("data/hotel.db")
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+        DELETE
+        FROM rooms
+        WHERE room_number = ?
+            """,(r_num,))
+        conn.commit()
+    except (sqlite3.Error,ValueError) as e:
+        print(f"{e}")
+    finally:
+        conn.close()
 
 def cancel_booking(number:int):
     try:
@@ -247,7 +261,6 @@ def cancel_booking(number:int):
         print("room cancelled succesfully")
     except:
         print("Error on canceling booking")
-    
     finally:
         conn.close()
     

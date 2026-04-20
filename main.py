@@ -5,6 +5,7 @@ import time
 from tabulate import tabulate
 from data.database import (
     add_room,
+    delete_room,
     cancel_booking,
     create_booking,
     get_rooms,
@@ -54,17 +55,13 @@ def view_bookings_main():
     
 def book_room_main():
     view_rooms_main()
-    conn =sqlite3.connect("data/hotel.db")
-    cursor = conn.cursor()
-
-    pena =  cursor.execute("""
-                   SELECT room_number
-                   FROM rooms
-                   """)
     try:
         r_number = int(input("Give room number:"))
-        if (r_number,) not in pena.fetchall():
+        if (r_number,) not in [(room[0],) for room in get_rooms()]:
             raise ValueError("Room not found")
+        exists = any(item[0] == r_number for item in get_bookings())
+        if exists == False:
+            raise ValueError("Room not")
         c_name = input("Give customer name:")
         c_check_in = input("Give check in date (dd-mm-yyyy):")
         c_check_out = input("Give check out date (dd-mm-yyyy):")
@@ -81,6 +78,10 @@ def cancel_booking_main():
         view_bookings_main()
         try:
             r_number = int(input("Give booking id:"))
+            exists = any(item[0] == r_number for item in get_bookings())
+
+            if exists == False:
+                raise ValueError("Room id not found")
             cancel_booking(r_number)
         except ValueError as e:
             print(f"Error has occurred: {e}")
@@ -123,6 +124,19 @@ def modify_bookings_main():
         return
     view_bookings_main()
     
+def delete_room_main():
+    view_rooms_main()
+    try:
+        r_num = int(input("Input room number:"))
+        exists = any(item[0] == r_num for item in get_rooms())
+        if exists == False:
+            raise ValueError("Room number not found")
+        delete_room(r_num)
+    except ValueError as e:
+        print(f"Error on deleting room {e}")
+        return
+    view_rooms_main()
+    
 
 def menu():
     print("Hotel Room Booking System")
@@ -133,6 +147,7 @@ def menu():
     print("5. View bookings:")
     print("6. View rooms:")
     print("7. Cancel booking:")
+    print("8. Delete room:")
     print("0. Exit:")
 
 def main():
@@ -146,6 +161,7 @@ def main():
         "5": view_bookings_main,
         "6": view_rooms_main, 
         "7": cancel_booking_main,
+        "8": delete_room_main
     }
 
     while True:
