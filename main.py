@@ -18,24 +18,42 @@ from data.database import (
 
 DATE_FORMAT = "%d-%m-%Y"
 DB_PATH = Path(__file__).with_name("data").joinpath("hotel.db")
+ALLOWED_ROOM_TYPES = ["Single", "Double", "Suite", "Deluxe"]
 
 def add_room_main():
-    try: 
-       r_number = int(input("Give room number:"))
-       if (r_number,) in get_rooms() or r_number < 0:
-           raise ValueError("Room already exists.")
-       
-       r_type = input("Give room type:")
-       if r_type.strip() == "":
-           raise ValueError("Room type cannot be empty")
-       r_price = int(input("Give roomprice:"))
-       if r_price < 1:
-           raise ValueError("Room price cannot be under 1")
-       
-    except ValueError as e:
-        print(f"An Error has occurred: {e}")
-        return 
-    add_room(r_number,r_type.title(),r_price)
+    while True:
+        try:
+            r_number = int(input("Give room number (or 0 to cancel): "))
+            if r_number == 0: return
+            
+            if (r_number,) in get_rooms() or r_number < 0:
+                raise ValueError("Room already exists or invalid number.")
+            break
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    while True:
+        try:
+            print(f"Allowed types: {', '.join(ALLOWED_ROOM_TYPES)}")
+            r_type = input("Give room type: ").title()
+            
+            if r_type not in ALLOWED_ROOM_TYPES:
+                raise ValueError(f"Invalid type. Must be one of: {', '.join(ALLOWED_ROOM_TYPES)}")
+            break
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    while True:
+        try:
+            r_price = int(input("Give room price: "))
+            if r_price < 1:
+                raise ValueError("Room price cannot be under 1")
+            break
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    add_room(r_number, r_type, r_price)
+    print("Room added successfully!")
 
 
 def view_rooms_main():
@@ -55,24 +73,37 @@ def view_bookings_main():
     
 def book_room_main():
     view_rooms_main()
-    try:
-        r_number = int(input("Give room number:"))
-        if (r_number,) not in [(room[0],) for room in get_rooms()]:
-            raise ValueError("Room not found")
-        exists = any(item[0] == r_number for item in get_bookings())
-        if exists == False:
-            raise ValueError("Room not")
-        c_name = input("Give customer name:")
-        c_check_in = input("Give check in date (dd-mm-yyyy):")
-        c_check_out = input("Give check out date (dd-mm-yyyy):")
+    print("(Type '0' to cancel at any time)")
+    while True:
+        try:
+            r_number = int(input("Give room number: "))
+            if r_number == 0: return # Cancel
+            
+            if (r_number,) not in [(room[0],) for room in get_rooms()]:
+                raise ValueError("Room not found.")
+            
+            if any(item[2] == r_number for item in get_bookings()):
+                raise ValueError("Room is already booked.")
+            break 
+        except ValueError as e:
+            print(f"Error: {e}")
 
-        datetime.strptime(c_check_in, DATE_FORMAT)
-        datetime.strptime(c_check_out,DATE_FORMAT)
-    except ValueError as e:
-        print(f"An Error has occurred: {e}")
-        return 
-    create_booking(c_name,r_number,c_check_in,c_check_out)
-    print("Booking created succesfully")
+    c_name = input("Give customer name: ")
+    
+    while True:
+        try:
+            c_check_in = input("Give check in date (e.g., 21-04-2026): ")
+            c_check_out = input("Give check out date (e.g., 21-04-2026): ")
+            
+            datetime.strptime(c_check_in, DATE_FORMAT)
+            datetime.strptime(c_check_out, DATE_FORMAT)
+            
+            break
+        except ValueError:
+            print("Invalid date format! Please use DD-MM-YYYY.")
+
+    create_booking(c_name, r_number, c_check_in, c_check_out)
+    print("Booking created successfully!")
 
 def cancel_booking_main():
         view_bookings_main()
@@ -88,18 +119,57 @@ def cancel_booking_main():
 
 def modify_room_main():
     view_rooms_main()
-    try:
-        orginal_r_num = int(input("Give original room number:"))
-        new_r_num = int(input("Give new room number(leave empty for no change):"))
-        new_r_type = input("Give new room type(leave empty for no change):")
-        new_r_price = input("Give new room price (leave empty for no change):")
+    
+    while True:
+        try:
+            r_num_input = input("Input room number to modify (0 to cancel): ")
+            r_num = int(r_num_input)
+            if r_num == 0: return 
+            
+            if not any(item[0] == r_num for item in get_rooms()):
+                raise ValueError("Room number not found.")
+            break 
+        except ValueError as e:
+            print(f"Error: {e}")
 
-        modify_room(orginal_r_num,new_r_num,new_r_type,new_r_price)
+    new_r_num = None
+    while True:
+        try:
+            val = input("New room number (empty to skip): ")
+            if val == "": break
+            new_r_num = int(val)
+            break
+        except ValueError:
+            print("Invalid number.")
 
-    except ValueError as e:
-        print(f"Error has occurred: {e}")
+    new_r_type = None
+    while True:
+        try:
+            print(f"Available types: {', '.join(ALLOWED_ROOM_TYPES)}")
+            val = input("New room type (empty to skip): ").title()
+            if val == "": break
+            
+            if val not in ALLOWED_ROOM_TYPES:
+                raise ValueError(f"'{val}' is not a valid type.")
+            new_r_type = val
+            break
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    new_r_price = None
+    while True:
+        try:
+            val = input("New price (empty to skip): ")
+            if val == "": break
+            new_r_price = int(val)
+            if new_r_price < 1: raise ValueError("Price must be > 0")
+            break
+        except ValueError as e:
+            print(f"Error: {e}")
+
+    modify_room(r_num, new_number=new_r_num, r_type=new_r_type, price=new_r_price)
+    print("Room updated successfully!")
     view_rooms_main()
-
 
 def modify_bookings_main():
     view_bookings_main()
@@ -183,4 +253,3 @@ def main():
             print(f"An error occurred: {exc}")
 if __name__ == "__main__":
     main()
-
