@@ -69,7 +69,7 @@ def book_room_main():
         datetime.strptime(c_check_in, DATE_FORMAT)
         datetime.strptime(c_check_out,DATE_FORMAT)
     except ValueError as e:
-        print(f"An Error has ocuired: {e}")
+        print(f"An Error has occurred: {e}")
         return 
     create_booking(c_name,r_number,c_check_in,c_check_out)
     print("Booking created succesfully")
