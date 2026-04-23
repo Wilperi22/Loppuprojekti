@@ -98,7 +98,25 @@ def modify_bookings(ID,new_name=None,new_number=None,new_check_in=None,new_check
         #Used for modifying bookings
         conn = sqlite3.connect("data/hotel.db")
         cursor = conn.cursor()
-
+        try:
+            if new_check_out is not None or new_check_in is not None:
+                cursor.execute("SELECT check_in, check_out FROM bookings WHERE ID=?",(ID,))
+                row = cursor.fetchone()
+                if row is None:
+                    conn.close()
+                    raise ValueError(f"No booking found with ID {ID}")
+                orginal_check_in = row[0]
+                orginal_check_out = row[1]
+                if new_check_in is not None:
+                    orginal_check_in = new_check_in
+                if new_check_out is not None:
+                    orginal_check_out = new_check_out
+                if orginal_check_in >= orginal_check_out:
+                    raise ValueError("Check-out must be after check-in")
+        except ValueError as e:  
+            conn.close()
+            print(f"Error on check-in/check-out dates {e}")
+            raise           
         updates = {
             "guest_name":new_name,
             "room_number":new_number,
@@ -232,7 +250,8 @@ def create_booking(name,number,check_in,check_out):
             print(f"{e} occured while trying to insert")
         finally:
             conn.close()
-        
+    else:
+        raise ValueError("Room is already booked")
     conn.commit()
     conn.close()
     return

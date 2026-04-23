@@ -83,8 +83,6 @@ def book_room_main():
             if (r_number,) not in [(room[0],) for room in get_rooms()]:
                 raise ValueError("Room not found.")
             
-            if any(item[2] == r_number for item in get_bookings()):
-                raise ValueError("Room is already booked.")
             break 
         except ValueError as e:
             print(f"Error: {e}")
@@ -107,7 +105,7 @@ def book_room_main():
         
 
     except ValueError as e:
-        return f"Error occurred "
+        print(f"Error occurred {e}")
     print("Booking created successfully!")
 
 def cancel_booking_main():
