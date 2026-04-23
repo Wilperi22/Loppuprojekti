@@ -22,6 +22,7 @@ ALLOWED_ROOM_TYPES = ["Single", "Double", "Suite", "Deluxe"]
 
 def add_room_main():
     while True:
+        view_rooms_main()
         try:
             r_number = int(input("Give room number (or 0 to cancel): "))
             if r_number == 0: return
@@ -53,11 +54,11 @@ def add_room_main():
             print(f"Error: {e}")
 
     add_room(r_number, r_type, r_price)
+    view_rooms_main()
     print("Room added successfully!")
 
 
 def view_rooms_main():
-    #rows = rooms.fetchall
     rows = get_rooms()
     print(tabulate(rows,
                    headers=["Room number","Room type","Price per night"],
@@ -101,8 +102,12 @@ def book_room_main():
             break
         except ValueError:
             print("Invalid date format! Please use DD-MM-YYYY.")
+    try:
+        create_booking(c_name, r_number, c_check_in, c_check_out)
+        
 
-    create_booking(c_name, r_number, c_check_in, c_check_out)
+    except ValueError as e:
+        return f"Error occurred "
     print("Booking created successfully!")
 
 def cancel_booking_main():

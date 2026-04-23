@@ -25,7 +25,8 @@ def init_db():
     ''')    
     conn.commit()
     conn.close()
-    print("Database intialized succesfully!")
+
+   
 
 
 def to_datetime(date_text: str):
@@ -187,10 +188,16 @@ def create_booking(name,number,check_in,check_out):
         raise ValueError("Room not found!")
     
     try:
-        if check_in_db >= check_out_db:
+        if check_in_dt >= check_out_dt:
             raise ValueError("Check-out must be after check-in")
+
+
     except ValueError as e:
+        conn.close()
         print(f"Error on check-in/check-out dates {e}")
+        raise
+        
+        
     #Tarkistus onko päivälle jo varaus
     cursor.execute(
         """
@@ -218,16 +225,15 @@ def create_booking(name,number,check_in,check_out):
                 """,(name,number,check_in_db,check_out_db,total_price(number,check_in,check_out))
                 ) 
             conn.commit()
-            conn.close()
+
             return
         
         except sqlite3.Error as e:
             print(f"{e} occured while trying to insert")
-
         finally:
             conn.close()
-            return
-    conn.commit()    
+        
+    conn.commit()
     conn.close()
     return
 
