@@ -106,6 +106,7 @@ def book_room_main():
 
     except ValueError as e:
         print(f"Error occurred {e}")
+    view_bookings_main()
     print("Booking created successfully!")
 
 def cancel_booking_main():
@@ -177,7 +178,9 @@ def modify_room_main():
 def modify_bookings_main():
     view_bookings_main()
     try:
-        id = int(input("Input booking ID:"))
+        id = int(input("Input booking ID (or 0 to cancel): "))
+        if id == 0:
+            return
         new_name = input("New name(leave empty for no change):")
         new_number = input("New room number(leave empty for no change):")
         new_check_in = input(f"New check in format {DATE_FORMAT} (leave empty for no change): ")
