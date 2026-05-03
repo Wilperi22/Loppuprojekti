@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime,date
 from pathlib import Path
 import time
 from tabulate import tabulate
@@ -89,17 +89,27 @@ def book_room_main():
 
     c_name = input("Give customer name: ")
     
+    if not c_name.isalpha():
+        raise ValueError("Name must be valid")
+        
+
     while True:
         try:
             c_check_in = input("Give check in date (e.g., 21-04-2026): ")
             c_check_out = input("Give check out date (e.g., 21-04-2026): ")
+            check_in = datetime.strptime(c_check_in, DATE_FORMAT)
+
+            if check_in.date() < date.today():
+                raise ValueError("Check in cannot be in the past")
             
             datetime.strptime(c_check_in, DATE_FORMAT)
             datetime.strptime(c_check_out, DATE_FORMAT)
-            
+
             break
-        except ValueError:
-            print("Invalid date format! Please use DD-MM-YYYY.")
+        except ValueError as e:
+            print(f"Error occured {e}")
+    
+
     try:
         create_booking(c_name, r_number, c_check_in, c_check_out)
         
